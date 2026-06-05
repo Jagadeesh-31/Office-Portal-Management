@@ -1,0 +1,6 @@
+node_modules/
+db/pulse.db
+db/pulse.db-wal
+db/pulse.db-shm
+.env
+*.log

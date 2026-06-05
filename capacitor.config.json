@@ -1,0 +1,8 @@
+{
+  "appId": "com.nexatech.pulse",
+  "appName": "Pulse EMS",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}
