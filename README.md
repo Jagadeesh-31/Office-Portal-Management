@@ -1,4 +1,4 @@
-# Pulse EMS — Full Stack Employee Management System
+# Office EMS — Full Stack Employee Management System
 
 NexaTech IT company HR dashboard with **real-time updates** via WebSockets.
 
