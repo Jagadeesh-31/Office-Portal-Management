@@ -1,7 +1,12 @@
 const Database = require('better-sqlite3')
 const path = require('path')
+const os = require('os')
 
-const dbPath = path.join(__dirname, 'pulse.db')
+const dbPath = process.env.SQLITE_PATH || (
+  process.env.VERCEL
+    ? path.join(os.tmpdir(), 'pulse.db')
+    : path.join(__dirname, 'pulse.db')
+)
 const db = new Database(dbPath)
 
 db.pragma('journal_mode = WAL')

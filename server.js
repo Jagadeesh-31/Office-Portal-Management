@@ -7,9 +7,12 @@ const { initSchema, getMetrics, logActivity, db, rowToEmployee, logOfficePresenc
 const apiRouter = require('./routes/api')
 
 const PORT = process.env.PORT || 3000
+const isServerless = Boolean(process.env.VERCEL)
 const app = express()
-const server = http.createServer(app)
-const io = new Server(server, { cors: { origin: '*' } })
+const server = isServerless ? null : http.createServer(app)
+const io = isServerless
+  ? { emit: () => {} }
+  : new Server(server, { cors: { origin: '*' } })
 
 initSchema()
 
@@ -27,10 +30,12 @@ app.set('getMetrics', getMetrics)
 
 app.use('/api', apiRouter)
 
-io.on('connection', (socket) => {
-  socket.emit('metrics:update', getMetrics())
-  console.log(`Client connected (${io.engine.clientsCount} online)`)
-})
+if (!isServerless) {
+  io.on('connection', (socket) => {
+    socket.emit('metrics:update', getMetrics())
+    console.log(`Client connected (${io.engine.clientsCount} online)`)
+  })
+}
 
 // Simulated IT company live events (server-side real-time)
 const IT_NAMES = [
@@ -93,17 +98,27 @@ function simulateRandomClockIn() {
   io.emit('metrics:update', getMetrics())
 }
 
-setInterval(() => {
-  const template = ACTIVITY_TEMPLATES[Math.floor(Math.random() * ACTIVITY_TEMPLATES.length)]
-  broadcastActivity(template)
-}, 8000)
+if (!isServerless) {
+  setInterval(() => {
+    const template = ACTIVITY_TEMPLATES[Math.floor(Math.random() * ACTIVITY_TEMPLATES.length)]
+    broadcastActivity(template)
+  }, 8000)
 
-setInterval(() => {
-  if (Math.random() > 0.45) simulateRandomClockIn()
-}, 10000)
+  setInterval(() => {
+    if (Math.random() > 0.45) simulateRandomClockIn()
+  }, 10000)
+}
 
-server.listen(PORT, () => {
-  console.log(`\n🚀 Pulse running at http://localhost:${PORT}`)
-  console.log(`   API:  http://localhost:${PORT}/api/metrics`)
-  console.log(`   Real-time: WebSocket via Socket.io\n`)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
+
+if (!isServerless) {
+  server.listen(PORT, () => {
+    console.log(`\n🚀 Pulse running at http://localhost:${PORT}`)
+    console.log(`   API:  http://localhost:${PORT}/api/metrics`)
+    console.log(`   Real-time: WebSocket via Socket.io\n`)
+  })
+}
+
+module.exports = app
